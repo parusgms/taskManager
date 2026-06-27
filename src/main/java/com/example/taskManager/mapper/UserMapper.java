@@ -1,0 +1,16 @@
+package com.example.taskManager.mapper;
+
+import com.example.taskManager.dto.RegisterRequest;
+import com.example.taskManager.entity.User;
+import org.springframework.stereotype.Component;
+
+@Component
+public class UserMapper {
+    public User toUser(RegisterRequest request, String passwordHash) {
+        return User.builder()
+                .username(request.username())
+                .email(request.email())
+                .passwordHash(passwordHash)
+                .build();
+    }
+}
