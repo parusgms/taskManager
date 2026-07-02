@@ -13,8 +13,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "tasks")
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,7 +33,6 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private TaskPriority priority;
 
-    @Column(name = "due_date")
     private LocalDate dueDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,10 +48,9 @@ public class Task {
     private User author;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

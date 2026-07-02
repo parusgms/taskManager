@@ -9,8 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "groups")
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,6 +28,6 @@ public class Group {
     private User owner;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 }
