@@ -19,11 +19,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class GroupService {
 
     private final GroupRepository groupRepository;
@@ -37,12 +37,7 @@ public class GroupService {
         Group group = groupMapper.toGroup(request, owner);
         Group savedGroup = groupRepository.save(group);
 
-        GroupMember member = GroupMember.builder()
-                .id(new GroupMemberId(savedGroup.getId(), owner.getId()))
-                .group(savedGroup)
-                .user(owner)
-                .role(GroupRole.OWNER)
-                .build();
+        GroupMember member = groupMapper.toMember(savedGroup, owner, GroupRole.OWNER);
         groupMemberRepository.save(member);
 
         return groupMapper.toResponse(savedGroup);
@@ -54,8 +49,7 @@ public class GroupService {
         Group group = checkGroup(groupId);
         checkIsOwner(group, user);
 
-        group.setName(request.name());
-        group.setDescription(request.description());
+        groupMapper.updateGroup(group, request);
         Group updatedGroup = groupRepository.save(group);
 
         return groupMapper.toResponse(updatedGroup);
@@ -67,11 +61,12 @@ public class GroupService {
         Group group = checkGroup(groupId);
         checkIsOwner(group, user);
 
-        Page<GroupMember> members = groupRepository.findAllMembersByGroup(groupId, Pageable.unpaged());
-        groupMemberRepository.deleteAll(members.getContent());
+        List<GroupMember> members = groupRepository.findAllMembersByGroup(groupId);
+        groupMemberRepository.deleteAll(members);
         groupRepository.delete(group);
     }
 
+    @Transactional(readOnly = true)
     public GroupResponse getGroup(UUID groupId, String username) {
         User user = checkUser(username);
         Group group = checkGroup(groupId);
@@ -79,12 +74,14 @@ public class GroupService {
         return groupMapper.toResponse(group);
     }
 
+    @Transactional(readOnly = true)
     public Page<GroupResponse> getUserGroups(String username, Pageable pageable) {
         User user = checkUser(username);
         Page<Group> groups = groupRepository.findAllGroupsByUser(user, pageable);
         return groups.map(groupMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
     public Page<GroupMemberResponse> getGroupMembers(UUID groupId, String username, Pageable pageable) {
         User user = checkUser(username);
         checkGroup(groupId);
@@ -107,12 +104,7 @@ public class GroupService {
             throw new DuplicateResourceException("Пользователь уже состоит в группе");
         }
 
-        GroupMember member = GroupMember.builder()
-                .id(new GroupMemberId(groupId, newMember.getId()))
-                .group(group)
-                .user(newMember)
-                .role(GroupRole.MEMBER)
-                .build();
+        GroupMember member = groupMapper.toMember(group, newMember, GroupRole.MEMBER);
         GroupMember savedMember = groupMemberRepository.save(member);
 
         return groupMapper.toMemberResponse(savedMember);
@@ -128,12 +120,15 @@ public class GroupService {
             throw new PermissionDeniedException("Нельзя удалить владельца группы");
         }
 
-        GroupMemberId memberId = new GroupMemberId(groupId, userIdToRemove);
+        GroupMemberId memberId = groupMapper.toMemberId(groupId, userIdToRemove);
+
         GroupMember member = groupMemberRepository.findById(memberId)
                 .orElseThrow(() -> new UserNotFoundException("Пользователь не найден в группе"));
 
         groupMemberRepository.delete(member);
     }
+
+
 
     private User checkUser(String username) {
         return userRepository.findByUsername(username)
