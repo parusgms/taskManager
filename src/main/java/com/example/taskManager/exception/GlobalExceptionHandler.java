@@ -78,6 +78,22 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(TaskNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTaskNotFound(
+            TaskNotFoundException e,
+            HttpServletRequest request
+    ) {
+        return buildErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(InvalidEnumValueException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidEnum(
+            InvalidEnumValueException e,
+            HttpServletRequest request
+    ) {
+        return buildErrorResponse(e.getMessage(), HttpStatus.BAD_REQUEST, request);
+    }
+
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             String message,
             HttpStatus status,

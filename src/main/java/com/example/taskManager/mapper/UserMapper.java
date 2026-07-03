@@ -3,9 +3,11 @@ package com.example.taskManager.mapper;
 import com.example.taskManager.dto.requests.RegisterRequest;
 import com.example.taskManager.dto.responses.UserResponse;
 import com.example.taskManager.entity.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class UserMapper {
     public User toUser(RegisterRequest request, String passwordHash) {
         return User.builder()
@@ -16,11 +18,11 @@ public class UserMapper {
     }
 
     public UserResponse toResponse(User user) {
-        return new UserResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail()
-        );
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
     }
 
 }
